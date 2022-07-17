@@ -88,6 +88,7 @@ end
 do
     function library.new(name,special)
         assert(typeof(name)=="string","Library name either nil or not a string")
+        special = special or {}
         do -- create UI
             local UI = Instance.new("ScreenGui")
             UI.Name = "Artemis"
@@ -547,9 +548,9 @@ do
         local loading = loader.Status.Loading
 
         loader.Player.Thumbnail.Image = utility:GetPlayerThumbnail(player.UserId)
-        loader.PlayerName.Text = player.Name
-        loader.Title.Text = info.Title or "User"
-        loader.Title.TextColor3 = info.TitleTextColor or Color3.new(0,1,0)
+        loader.Player.PlayerName.Text = player.Name
+        loader.Player.Title.Text = info.Title or "User"
+        loader.Player.Title.TextColor3 = info.TitleTextColor or Color3.new(0,1,0)
 
         loader.GameIcon.Image = info.ThumbnailId or ""
 
