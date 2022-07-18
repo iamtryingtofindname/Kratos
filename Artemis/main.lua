@@ -82,6 +82,43 @@ do
 
         return {inputBegan,inputEnded,updateEvent}
     end
+
+    function utility:HandleButton(button,callback)
+        local startSize = UDim2.fromScale(1,1)
+        local goalSize = UDim2.fromScale(0.8,0.8)
+        local oldTween
+        local duration = 0.15
+        local isPressing = false
+
+        local function down()
+            pcall(function()
+                oldTween:Cancel()
+            end)
+            button.Inner.Size = startSize
+            utility:Tween(button.Inner,{Size = goalSize},duration)
+            isPressing = true
+        end
+
+        local function up(doCallback)
+            if isPressing then
+                pcall(function()
+                    oldTween:Cancel()
+                end)
+                utility:Tween(button.Inner,{Size = startSize},duration)
+                if doCallback then
+                    callback()
+                end
+            end
+        end
+
+        button.Inner.Button.MouseButton1Down:Connect(down)
+        button.Inner.Button.MouseButton1Up:Connect(function()
+            up(true)
+        end)
+        button.Inner.Button.MouseLeave:Connect(function()
+            up()
+        end)
+    end
 end
 
 -- LIBRARY FUNCTIONS
@@ -526,6 +563,7 @@ do
             -- dragging
             local dragEvents = utility:InitDragging(mainFrame,mainFrame.Background.Top.Button)
 
+            UI.Enabled = true
             UI.Parent = Core
 
             return setmetatable({
@@ -556,6 +594,9 @@ do
 
         loader.GameName.Text = info.GameName or "Game"
 
+        loader.Status.Loading.Visible = true
+        loader.Status.Load.Visible = false
+
         self._load_event = Run.RenderStepped:Connect(function()
             -- Enable the loader and disable everything else
             for _,v in pairs(container:GetChildren()) do
@@ -569,14 +610,22 @@ do
     end
 
     function library:StopLoading()
-        utility:Disconnect(self._load_event)
-        utility:Wait()
-        local main = self.main
-        for _,v in pairs(self.container:GetChildren()) do
-            if v:IsA("Frame") then
-                v.Visible = v == main
+        local function callback()
+            utility:Disconnect(self._load_event)
+            utility:Wait()
+            local main = self.main
+            for _,v in pairs(self.container:GetChildren()) do
+                if v:IsA("Frame") then
+                    v.Visible = v == main
+                end
             end
         end
+
+        self.loader.Status.Loading.Visible = false
+        self.loader.Status.Load.Visible = true
+
+
+        utility:HandleButton(self.loader.Status.Load,callback)
     end
 end
 
