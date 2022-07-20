@@ -224,7 +224,7 @@ function helios:updateWithDirectory(directoryPath,_directory) -- leave _director
         helios:Warn("You must initiate Helios before updating a directory")
         return
     end
-    assert(helios._place_directory,"CRITICAL: ::Init method missing _place_directory update")
+    assert(helios._place_directory,"Helios: ::Init method missing _place_directory update, unable to fulfil file update request")
     local directory = _directory or helios._place_directory
     for i,v in pairs(directoryPath) do
         local thisDirectory = helios:getDirectory(directory,i)
@@ -290,6 +290,13 @@ function helios:repairMetadata(directory,encoded) -- assuming the directory exis
     end
 end
 
+function helios:setMetadata(directory,encoded)
+    local thisMetadataPath = helios:getDirectory(directory,helios.metadataPath)
+    if isfile(thisMetadataPath) then
+        writefile(thisMetadataPath,encoded)
+    end
+end
+
 function helios:repairCredits(directory,content) -- meant for internal use
     local existingContent = isfile(directory) and readfile(directory)
     if existingContent ~= content then
@@ -350,6 +357,9 @@ function helios:Init(placeId,directory,metadataNow)
 
     local old_metadata = helios:getMetaData(placeDirectory)
     local decoded = helios:decodeDirectory(placeDirectory,directory)
+
+    helios:setMetadata(helios.Main,helios.metadata)
+    helios:setMetadata(placeDirectory,helios._encoded_place_metadata)
 
     helios._main_update = Run.RenderStepped:Connect(function() -- regular repairs
         if not helios._running and (os.clock()-helios._last_running)>=helios.TIME_BETWEEN_REPAIRS then
