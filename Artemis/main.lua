@@ -2192,8 +2192,15 @@ do
             _listening = not _listening
         end)
 
+        local keyCodeBlacklist = {
+            Enum.KeyCode.I;
+            Enum.KeyCode.O;
+            Enum.KeyCode.Insert;
+            Enum.KeyCode.Delete;
+        }
+
         UIS.InputBegan:Connect(function(input,gpe)
-            if _listening and input.UserInputType == Enum.UserInputType.Keyboard then
+            if _listening and input.UserInputType == Enum.UserInputType.Keyboard and not table.find(keyCodeBlacklist,input.KeyCode) then
                 _listening = false
                 setTo(input.KeyCode)
             end
