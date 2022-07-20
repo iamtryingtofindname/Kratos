@@ -204,7 +204,6 @@ function helios:decodeDirectory(directory,directoryLine) -- ... is for indecies
         if isFile then
             if isfile(dir) then
                 local content = readfile(dir)
-                print("content:",content)
                 if content == "" then
                     directoryLine[i] = content
                 else
