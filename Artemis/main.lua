@@ -1,3 +1,18 @@
+--[[
+
+
+░█████╗░██████╗░████████╗███████╗███╗░░░███╗██╗░██████╗
+██╔══██╗██╔══██╗╚══██╔══╝██╔════╝████╗░████║██║██╔════╝
+███████║██████╔╝░░░██║░░░█████╗░░██╔████╔██║██║╚█████╗░
+██╔══██║██╔══██╗░░░██║░░░██╔══╝░░██║╚██╔╝██║██║░╚═══██╗
+██║░░██║██║░░██║░░░██║░░░███████╗██║░╚═╝░██║██║██████╔╝
+╚═╝░░╚═╝╚═╝░░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░░░░╚═╝╚═╝╚═════╝░
+
+Private UI library made by iamtryingtofindname#9879
+Used by Kratos script by iamtryingtofindname#9879
+
+]]--
+
 -- SERVICES
 local Players = game:GetService("Players")
 local TS = game:GetService("TweenService")
@@ -32,6 +47,10 @@ do
         return start+(goal-start)*alpha
     end
 
+    function utility:Warn(...)
+        warn("ARTEMIS:", ...)
+    end
+
     function utility:Wait()
         return Run.RenderStepped:Wait()
     end
@@ -60,8 +79,7 @@ do
 
     function utility:GetColor(percentage, ColorKeyPoints)
         if (percentage < 0) or (percentage>1) then
-            --error'getColor percentage out of bounds!'
-            warn'getColor got out of bounds percentage (less than 0 or greater than 1'
+            utility:Warn('getColor got out of bounds percentage (less than 0 or greater than 1')
         end
         
         local closestToLeft = ColorKeyPoints[1]
@@ -80,7 +98,7 @@ do
                 return color
             end
         end
-        warn('Color not found!')
+        utility:Warn('Color not found!')
         return color
     end
 
@@ -2027,7 +2045,7 @@ do
                 picker1Drag,picker2Drag = false,false
             end
             if picker1Drag and picker2Drag then
-                warn("Both drag events running at same time")
+                utility:Warn("Both drag events running at same time")
                 picker2Drag = false
             end
             if picker1Drag then
@@ -2489,5 +2507,7 @@ do
         end
     end
 end
+
+print("Artemis initiated")
 
 return library
