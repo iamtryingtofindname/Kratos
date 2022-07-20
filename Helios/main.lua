@@ -357,7 +357,7 @@ function helios:Init(placeId,directory,metadataNow)
     local old_metadata = helios:getMetaData(placeDirectory)
     local decoded = helios:decodeDirectory(placeDirectory,directory)
 
-    helios:setMetadata(helios.Main,helios.metadata)
+    helios:setMetadata(helios.Main,helios._encoded_metadata)
     helios:setMetadata(placeDirectory,helios._encoded_place_metadata)
 
     helios._main_update = Run.RenderStepped:Connect(function() -- regular repairs
@@ -384,5 +384,7 @@ helios._bind_to_close_event = Players.PlayerRemoving:Connect(function(p)
         end
     end
 end)
+
+print("Helios initiated")
 
 return helios
