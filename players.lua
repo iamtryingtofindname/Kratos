@@ -37,6 +37,8 @@ return { -- made by iamtryingtofindname#9879
         2466320010;
         2756232197;
         2061633641;
+        3721310707;
+        3721296074
     };
     ["Blacklist"] = {
 
