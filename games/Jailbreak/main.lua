@@ -15,7 +15,7 @@ Part of the Kratos script library
 
 ]]--
 
-local VERSION = "1.2.1"
+local VERSION = "1.2.2"
 
 if not game:IsLoaded() then
     game.Loaded:Wait()
@@ -670,10 +670,10 @@ do
             car.Engine:FindFirstChild(gyro).CFrame = camCFrame
         else
             pcall(function()
-                car.Engine:FindFirstChild(velocity)
+                car.Engine:FindFirstChild(velocity):Destroy()
             end)
             pcall(function()
-                car.Engine:FindFirstChild(gyro)
+                car.Engine:FindFirstChild(gyro):Destroy()
             end)
         end
     end)
@@ -691,10 +691,13 @@ do
     end)
 
     player.CharacterRemoving:Connect(function()
+        local car = Kratos:GetLocalPlayerVehicle()
         pcall(function()
-            core:Destroy()
+            car.Engine:FindFirstChild(velocity):Destroy()
         end)
-        core = nil
+        pcall(function()
+            car.Engine:FindFirstChild(gyro):Destroy()
+        end)
     end)
 end
 
