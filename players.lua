@@ -15,6 +15,7 @@ return { -- made by iamtryingtofindname#9879
                 1350477738;
                 1530054675;
                 2801170807;
+                224744418;
             }
         };
         ["Supporter"] = {
@@ -38,7 +39,8 @@ return { -- made by iamtryingtofindname#9879
         2756232197;
         2061633641;
         3721310707;
-        3721296074
+        3721296074;
+        224744418;
     };
     ["Blacklist"] = {
 
