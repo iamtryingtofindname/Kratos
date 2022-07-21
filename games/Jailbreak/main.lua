@@ -15,7 +15,7 @@ Part of the Kratos script library
 
 ]]--
 
-local VERSION = "1.1.0"
+local VERSION = "1.2.0"
 
 if not game:IsLoaded() then
     game.Loaded:Wait()
@@ -43,6 +43,7 @@ local VU = game:GetService("VirtualUser")
 
 -- GENERAL VARIABLES
 local player = Players.LocalPlayer
+local VehiclesFolder = workspace:WaitForChild("Vehicles")
 
 -- VARIABLES
 local ModuleUI = require(RS.Module.UI)
@@ -55,8 +56,9 @@ local GAME_THUMBNAIL_ID = 10196274249
 
 -- SCRIPT VARIABLES
 local CharacterFly = false
+local CarFly = false
 
-do
+do -- rawget mod
     local old_rawget = rawget
     rawget = function(tbl,...)
         local returnValue = tbl
@@ -83,6 +85,10 @@ local configs = {
     ["ToggleUI"] = Enum.KeyCode.LeftControl;
     ["CharacterFlyEnabled"] = false;
     ["CharacterFlyBind"] = Enum.KeyCode.X;
+    ["CarFlyEnabled"] = false;
+    ["CarFlyBind"] = Enum.KeyCode.Z;
+    ["CharacterFlySpeed"] = 35;
+    ["CarFlySpeed"] = 350;
 }
 
 local FILE_TREE = {
@@ -90,6 +96,7 @@ local FILE_TREE = {
 }
 local metadata = {
     ["inBeta"] = true;
+    ["keybindUpdate_7/21/22_12:05AM"] = true;
 }
 
 -- PLAYER DATA CHECK
@@ -142,6 +149,16 @@ if typeof(data["configs.json"])=="table" then
     configs = Helios:reconcile(data["configs.json"],configs)
 end
 
+-- METADATA INIT
+do
+    local function wipe()
+        delfolder(Helios._place_directory)
+    end
+    if oldMetadata["keybindUpdate_7/21/22_12:05AM"] ~= true then
+        wipe()
+    end
+end
+
 local Kratos = {}
 
 -- KRATOS FUNCTIONS
@@ -166,6 +183,16 @@ do
                 return c
             else
                 return false
+            end
+        end
+    end
+
+    function Kratos:GetLocalPlayerVehicle()
+        for _,v in pairs(VehiclesFolder:GetChildren()) do
+            if v:FindFirstChild("Seat") and v.Seat:FindFirstChild("PlayerName") and v:FindFirstChild("Make") and v:FindFirstChild("Engine") then
+                if v.Seat.PlayerName.Value == player.Name then
+                    return v
+                end
             end
         end
     end
@@ -474,7 +501,6 @@ end
 -- CHARACTER FLY
 do
     local core
-    local speed = 20
 
     local function repairCore(char)
         if core == nil then
@@ -489,6 +515,7 @@ do
         core.Transparency = 1
         core.CanTouch = false
         core.CanQuery = false
+        core.Massless = true
     
         core.Weld.Part0 = core
         core.Weld.Part1 = char.PrimaryPart
@@ -506,7 +533,7 @@ do
     
     Run.RenderStepped:Connect(function()
         local char = Kratos:GetLocalCharacter()
-        if char and CharacterFly and configs["CharacterFlyEnabled"] and workspace.CurrentCamera then
+        if char and char.Humanoid.Sit == false and CharacterFly and configs["CharacterFlyEnabled"] and workspace.CurrentCamera then
             local direction = Vector3.new()
     
             if keysDown[Enum.KeyCode.W] then
@@ -521,15 +548,125 @@ do
             if keysDown[Enum.KeyCode.D] then
                 direction = direction+Vector3.new(1,0,0)
             end
+            if keysDown[Enum.KeyCode.Space] then
+                direction = direction+Vector3.new(0,1,0)
+            end
+    
+            if math.abs(direction.X)+math.abs(direction.Y)+math.abs(direction.Z)>1 then
+                local sq2 = math.sqrt(2)/2
+                direction = direction*sq2
+            end
+    
+            direction = Vector3.new(direction.X,direction.Y*0.75,direction.Z)
     
             repairCore(char)
             local current = char.PrimaryPart.Position
             local body = core.BodyPosition
             local lv = workspace.CurrentCamera.CFrame.LookVector
             local goal = CFrame.lookAt(Vector3.zero,lv)+current
-            goal = goal*CFrame.new(direction*speed)
-            char.Humanoid.PlatformStand = false
+            goal = goal*CFrame.new(direction*configs["CharacterFlySpeed"])
+            char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown,false)
             body.Position = goal.Position
+        else
+            pcall(function()
+                core:Destroy()
+            end)
+            pcall(function()
+                char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown,true)
+            end)
+            core = nil
+        end
+    end)
+
+    UIS.InputBegan:Connect(function(input,gpe)
+        if input.UserInputType == Enum.UserInputType.Keyboard and not gpe then
+            keysDown[input.KeyCode] = true
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(input,gpe)
+        if input.UserInputType == Enum.UserInputType.Keyboard and not gpe then
+            keysDown[input.KeyCode] = false
+        end
+    end)
+
+    player.CharacterRemoving:Connect(function()
+        pcall(function()
+            core:Destroy()
+        end)
+        core = nil
+    end)
+end
+
+-- CAR FLY
+do
+    local core
+
+    local velocity = "velocity"
+    local gyro = "gyro"
+
+    local function repairCore(car)
+        if car.Engine:FindFirstChild(velocity)==nil then
+            Instance.new("BodyVelocity").Parent = car.Engine
+            car.Engine.BodyVelocity.Name = velocity
+        end
+        if car.Engine:FindFirstChild(gyro)==nil then
+            Instance.new("BodyGyro").Parent = car.Engine
+            car.Engine.BodyGyro.Name = gyro
+        end
+
+        car.Engine:FindFirstChild(velocity).MaxForce = Vector3.new(9e9,9e9,9e9)
+        car.Engine:FindFirstChild(velocity).P = 1250
+
+        car.Engine:FindFirstChild(gyro).MaxTorque = Vector3.new(9e9,9e9,9e9)
+        car.Engine:FindFirstChild(gyro).D = 500
+        car.Engine:FindFirstChild(gyro).P = 90000
+    end
+
+    local keysDown = {}
+--[[
+    local lastCFrame = nil
+    workspace.CurrentCamera:GetPropertyChangedSignal("CFrame"):Connect(function()
+        if Kratos:GetLocalPlayerVehicle() then
+            if workspace.CurrentCamera.CFrame ~= lastCFrame and not UIS:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+                workspace.CurrentCamera.CFrame = lastCFrame
+            else
+                lastCFrame = workspace.CurrentCamera.CFrame
+            end
+        end
+    end)
+]]--
+    Run.RenderStepped:Connect(function()
+        local char = Kratos:GetLocalCharacter()
+        local car = Kratos:GetLocalPlayerVehicle()
+        if char and car and CarFly and configs["CarFlyEnabled"] and workspace.CurrentCamera then
+            local direction = Vector3.new()
+
+            if keysDown[Enum.KeyCode.W] then
+                direction = direction+Vector3.new(0,0,-1)
+            end
+            if keysDown[Enum.KeyCode.S] then
+                direction = direction+Vector3.new(0,0,1)
+            end
+            if keysDown[Enum.KeyCode.A] then
+                direction = direction+Vector3.new(-1,0,0)
+            end
+            if keysDown[Enum.KeyCode.D] then
+                direction = direction+Vector3.new(1,0,0)
+            end
+
+            if math.abs(direction.X)+math.abs(direction.Z)>1 then
+                local sq2 = math.sqrt(2)/2
+                direction = direction*sq2
+            end
+
+            repairCore(car)
+
+            local camCFrame = workspace.CurrentCamera.CFrame
+            local engCFrame = CFrame.lookAt(Vector3.zero,camCFrame.LookVector)+car.Engine.Position
+            local goal = CFrame.new(Vector3.zero,engCFrame.LookVector)*(direction*configs["CarFlySpeed"])
+            car.Engine:FindFirstChild(velocity).Velocity = goal
+            car.Engine:FindFirstChild(gyro).CFrame = camCFrame
         else
             pcall(function()
                 core:Destroy()
@@ -575,6 +712,10 @@ do
             CharacterFly = false
         end)
 
+        __utilities:CreateSlider("Character Fly Speed",5,80,configs["CharacterFlySpeed"],function(newValue)
+            configs["CharacterFlySpeed"] = newValue
+        end,true,0)
+
         __utilities:CreateToggle("No E Wait",configs["NoPromptWait"],function(newValue)
             configs["NoPromptWait"] = newValue;
         end)
@@ -607,11 +748,21 @@ do
             configs["InfNitro"] = newValue
         end)
 
-        __carMods:CreateSlider("Engine Speed",0,300,configs["CarEngineSpeed"],function(newValue)
+        __utilities:CreateToggle("Car Fly",configs["CarFlyEnabled"],function(newValue)
+            notify("Car fly binded to "..configs["CarFlyBind"].Name)
+            configs["CarFlyEnabled"] = newValue
+            CarFly = false
+        end)
+
+        __utilities:CreateSlider("Car Fly Speed",5,500,configs["CarFlySpeed"],function(newValue)
+            configs["CarFlySpeed"] = newValue
+        end,true,0)
+
+        __carMods:CreateSlider("Engine Speed",0,120,configs["CarEngineSpeed"],function(newValue)
             configs["CarEngineSpeed"] = newValue
         end,true,0)
 
-        __carMods:CreateSlider("Turn Speed",0,100,configs["CarTurnSpeed"],function(newValue)
+        __carMods:CreateSlider("Turn Speed",0,60,configs["CarTurnSpeed"],function(newValue)
             configs["CarTurnSpeed"] = newValue/10
         end,true,0)
 
@@ -619,7 +770,7 @@ do
             configs["CarSuspensionHeight"] = newValue
         end,true,0)
 
-        __carMods:CreateSlider("Brakes Speed",0,100,configs["CarBrakesSpeed"],function(newValue)
+        __carMods:CreateSlider("Brakes Speed",0,120,configs["CarBrakesSpeed"],function(newValue)
             configs["CarBrakesSpeed"] = newValue
         end,true,0)
 
@@ -637,8 +788,12 @@ do
             configs["ToggleUI"] = newValue
         end)
 
-        __other:CreateKeybind("Character Fly Toggle",CharacterFly,function(newValue)
+        __other:CreateKeybind("Character Fly Bind",configs["CharacterFlyBind"],function(newValue)
             configs["CharacterFlyBind"] = newValue
+        end)
+
+        __other:CreateKeybind("Car Fly Bind",configs["CarFlyBind"],function(newValue)
+            configs["CarFlyBind"] = newValue
         end)
 
         -- Input
@@ -648,6 +803,8 @@ do
                     UI:Toggle()
                 elseif input.KeyCode == configs["CharacterFlyBind"] then
                     CharacterFly = not CharacterFly
+                elseif input.KeyCode == configs["CarFlyBind"] then
+                    CarFly = not CarFly
                 end
             end
         end)
