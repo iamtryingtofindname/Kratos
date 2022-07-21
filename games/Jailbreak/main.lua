@@ -15,7 +15,7 @@ Part of the Kratos script library
 
 ]]--
 
-local VERSION = "1.2.2"
+local VERSION = "1.2.3"
 
 if not game:IsLoaded() then
     game.Loaded:Wait()
@@ -110,12 +110,11 @@ do
         if not table.find(PlayerData.Whitelist,userId) then
             player:Kick("You are not whitelisted on Kratos!")
             error("Player is not whitelisted")
-            task.wait(9e9)
         end
     else
         if table.find(PlayerData.Blacklist,userId) then
             player:Kick("You are blacklisted from use of Kratos!")
-            task.wait(9e9)
+            error("Player is not whitelisted")
         end
     end
 
