@@ -99,8 +99,6 @@ Run.RenderStepped:Connect(function()
 
         direction = Vector3.new(direction.X,direction.Y*0.75,direction.Z)
 
-        print(direction)
-
         repairCore(char)
         local current = char.PrimaryPart.Position
         local body = core.BodyPosition
