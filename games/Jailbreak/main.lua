@@ -15,7 +15,7 @@ Part of the Kratos script library
 
 ]]--
 
-local VERSION = "1.2.0"
+local VERSION = "1.2.1"
 
 if not game:IsLoaded() then
     game.Loaded:Wait()
@@ -39,7 +39,6 @@ local UIS = game:GetService("UserInputService")
 local TS = game:GetService("TeleportService")
 local VU = game:GetService("VirtualUser")
 local Core = game:GetService("CoreGui")
-local VU = game:GetService("VirtualUser")
 
 -- GENERAL VARIABLES
 local player = Players.LocalPlayer
@@ -78,6 +77,7 @@ local configs = {
     ["CarEngineSpeed"] = 0;
     ["CarSuspensionHeight"] = 0;
     ["TirePopBypass"] = false;
+    ["InfNitro"] = false;
     ["CarTurnSpeed"] = 0;
     ["CarBrakesSpeed"] = 0;
     ["NoCellTime"] = false;
@@ -97,6 +97,7 @@ local FILE_TREE = {
 local metadata = {
     ["inBeta"] = true;
     ["keybindUpdate_7/21/22_12:05AM"] = true;
+    ["keybindUpdate_7/21/22_1:09PM"] = true;
 }
 
 -- PLAYER DATA CHECK
@@ -155,6 +156,9 @@ do
         delfolder(Helios._place_directory)
     end
     if oldMetadata["keybindUpdate_7/21/22_12:05AM"] ~= true then
+        wipe()
+    end
+    if oldMetadata["keybindUpdate_7/21/22_1:09PM"] ~= true then
         wipe()
     end
 end
@@ -381,12 +385,11 @@ end
 -- ANTI-IDLE KICK
 do
     local clickLocation = Vector2.new()
-    
+
     player.Idled:Connect(function()
         VU:CaptureController()
         VU:ClickButton2(clickLocation)
     end)
-    
 end
 
 -- NO E WAIT
@@ -600,8 +603,6 @@ end
 
 -- CAR FLY
 do
-    local core
-
     local velocity = "velocity"
     local gyro = "gyro"
 
@@ -669,9 +670,11 @@ do
             car.Engine:FindFirstChild(gyro).CFrame = camCFrame
         else
             pcall(function()
-                core:Destroy()
+                car.Engine:FindFirstChild(velocity)
             end)
-            core = nil
+            pcall(function()
+                car.Engine:FindFirstChild(gyro)
+            end)
         end
     end)
 
