@@ -15,7 +15,7 @@ Part of the Kratos script library
 
 ]]--
 
-local VERSION = "1.2.3"
+local VERSION = "1.2.4"
 
 if not game:IsLoaded() then
     game.Loaded:Wait()
@@ -664,9 +664,9 @@ do
 
             local camCFrame = workspace.CurrentCamera.CFrame
             local engCFrame = CFrame.lookAt(Vector3.zero,camCFrame.LookVector)+car.Engine.Position
-            local goal = CFrame.new(Vector3.zero,engCFrame.LookVector)*(direction*configs["CarFlySpeed"])
+            local goal = CFrame.new(Vector3.zero,camCFrame.LookVector.Unit)*(direction*configs["CarFlySpeed"])
             car.Engine:FindFirstChild(velocity).Velocity = goal
-            car.Engine:FindFirstChild(gyro).CFrame = camCFrame
+            car.Engine:FindFirstChild(gyro).CFrame = CFrame.lookAt(Vector3.zero,camCFrame.LookVector)
         else
             pcall(function()
                 car.Engine:FindFirstChild(velocity):Destroy()
