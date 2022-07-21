@@ -1,3 +1,25 @@
+--[[
+
+
+███████╗███████╗  ███████╗██╗░░░░░██╗░░░██╗
+██╔════╝██╔════╝  ██╔════╝██║░░░░░╚██╗░██╔╝
+█████╗░░█████╗░░  █████╗░░██║░░░░░░╚████╔╝░
+██╔══╝░░██╔══╝░░  ██╔══╝░░██║░░░░░░░╚██╔╝░░
+██║░░░░░███████╗  ██║░░░░░███████╗░░░██║░░░
+╚═╝░░░░░╚══════╝  ╚═╝░░░░░╚══════╝░░░╚═╝░░░
+
+Made by iamtryingtofindname#9879
+
+The fly that actually works lol
+
+]]--
+
+-- config
+local speed = 30
+local increment = 5
+local toggleKeybind = "X"
+
+-- code
 local Players = game:GetService("Players")
 local Run = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -6,7 +28,6 @@ local camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
 
 local core
-local speed = 20
 
 local function getLocalCharacter()
     local c = player.Character
@@ -23,6 +44,7 @@ end
 local function repairCore(char)
     if core == nil then
         core = Instance.new("Part")
+        core.Position = char.PrimaryPart.Position
         Instance.new("Weld").Parent = core
         Instance.new("BodyPosition").Parent = core
         Instance.new("BodyForce").Parent = core
@@ -66,11 +88,18 @@ Run.RenderStepped:Connect(function()
         if keysDown[Enum.KeyCode.D] then
             direction = direction+Vector3.new(1,0,0)
         end
-
-        if direction.X ~= 0 and direction.Z ~= 0 then
-            local sqrt2 = math.sqrt(2)
-            direction = Vector3.new(direction.X*sqrt2,direction.Y,direction.Z*sqrt2)
+        if keysDown[Enum.KeyCode.Space] then
+            direction = direction+Vector3.new(0,1,0)
         end
+
+        if math.abs(direction.X)+math.abs(direction.Y)+math.abs(direction.Z)>1 then
+            local sq2 = 2/math.sqrt(2)
+            direction = direction*sq2
+        end
+
+        direction = Vector3.new(direction.X,direction.Y*0.75,direction.Z)
+
+        print(direction)
 
         repairCore(char)
         local current = char.PrimaryPart.Position
@@ -94,8 +123,12 @@ end)
 UIS.InputBegan:Connect(function(input,gpe)
     if input.UserInputType == Enum.UserInputType.Keyboard and not gpe then
         keysDown[input.KeyCode] = true
-        if input.KeyCode == Enum.KeyCode.X then
+        if input.KeyCode == Enum.KeyCode[toggleKeybind] then
             CharacterFly = not CharacterFly
+        elseif input.KeyCode == Enum.KeyCode.KeypadPlus then
+            speed = math.clamp(speed+increment,5,1000)
+        elseif input.KeyCode == Enum.KeyCode.KeypadMinus then
+            speed = math.clamp(speed-increment,5,1000)
         end
     end
 end)
@@ -113,3 +146,5 @@ player.CharacterRemoving:Connect(function()
     end)
     core = nil
 end)
+
+print("FE Fly initiated by iamtryingtofindname#9879")
