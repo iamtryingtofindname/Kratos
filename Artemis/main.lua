@@ -1415,6 +1415,7 @@ do
             local ImageLabel = Instance.new("ImageLabel")
             local Inside = Instance.new("Frame")
             local ImageLabel_2 = Instance.new("ImageLabel")
+            local Button = Instance.new("TextButton")
             local Value = Instance.new("TextBox")
 
             --Properties:
@@ -1480,6 +1481,18 @@ do
             ImageLabel_2.SliceCenter = Rect.new(100, 100, 100, 100)
             ImageLabel_2.ZIndex = 300
 
+            Button.Name = "Button"
+            Button.Parent = Slider_2
+            Button.AnchorPoint = Vector2.new(0, 0.5)
+            Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Button.BackgroundTransparency = 1.000
+            Button.Position = UDim2.new(0, 0, 0.5, 0)
+            Button.Size = UDim2.new(1, 0, 2, 0)
+            Button.Font = Enum.Font.SourceSans
+            Button.Text = ""
+            Button.TextColor3 = Color3.fromRGB(0, 0, 0)
+            Button.TextSize = 14.000
+
             Value.Name = "Value"
             Value.Parent = Slider
             Value.AnchorPoint = Vector2.new(1, 0.5)
@@ -1505,7 +1518,7 @@ do
 
         -- handle slider
         local dragging = false
-        slider.Slider.InputBegan:Connect(function(input)
+        slider.Slider.Button.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 dragging = true
             end
